@@ -1,20 +1,109 @@
-// Letter-Counter.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <fstream>
+#include <map>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <vector>
+/*
+1. what is argc and *argv[]. how does 'char *argv[]' give a string? explain how C++ sees it
+2. 
+*/
 
-int main()
+// what is this error in countUnique chars where the function is_open() is not available 2. it was istream not ifstream lol.
+
+
+
+namespace CountLetters
 {
-    std::cout << "Hello World!\n";
+
+  namespace {
+
+    std::map<char, int> countCharsInString(const std::string& str) {
+      std::map<char, int> outcome;;
+
+      for (const char& c : str) {
+        outcome[c]++;
+      }
+      return outcome;
+
+    }
+  }
+
+  std::map<char, int> countUniqueChars(std::ifstream& incoming) {
+
+
+    std::map<char, int> outcome;
+
+    std::string line = "";
+    while (getline(incoming, line)) {
+      auto count = countCharsInString(line);
+      // add the read chars and their value to outcome
+      for (const auto& pair : count) {
+        outcome[pair.first] += pair.second;
+      }
+    }
+
+    return outcome;
+  }
+
+
+
+};
+
+
+
+namespace Display {
+
+  namespace {
+
+    std::string createCharIntRow(char key, int value) {
+      std::stringstream row;      
+
+      row << '[' << key << "] " << std::string(value, '*');
+      return row.str();
+    }
+  }
+
+template<typename T>
+static void displayCharInt(T data) {
+    
+  std::string result = "";
+
+  for (const auto& pair : data) {
+    std::string row = createCharIntRow(pair.first, pair.second);
+    
+    result += row + '\n';
+  }
+      
+  std::cout << result;
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+std::vector<std::pair<char, int>> sortByValue(std::map<char, int>& map) {
+  std::vector<std::pair<char, int>> vec(map.begin(), map.end());
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+  sort(vec.begin(), vec.end(), [](auto& a, auto& b) {
+    return a.second > b.second;
+    });
+
+  return vec;
+}
+
+}
+
+int main(int argc, char* argv[])
+{
+  
+  std::ifstream file("test.txt"); 
+
+  if (!file.is_open()) {
+    std::cerr << "File did not open";
+    return {};
+  }
+ 
+  auto counted = CountLetters::countUniqueChars(file);  
+  auto sorted = Display::sortByValue(counted);
+  Display::displayCharInt(sorted);
+
+  return 0;
+}

@@ -1,0 +1,9 @@
+std::vector<std::pair<char, int>> sortByValue(const std::map<char, int>& map) {
+  std::vector<std::pair<char, int>> vec(map.begin(), map.end());
+
+  std::sort(vec.begin(), vec.end(), [](auto& a, auto& b) {
+    return a.second > b.second;
+  });
+
+  return vec;
+}
