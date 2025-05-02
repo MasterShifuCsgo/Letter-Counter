@@ -5,6 +5,8 @@
 #include <sstream>
 #include <algorithm>
 #include <vector>
+#include <cmath>
+
 /*
 1. what is argc and *argv[]. how does 'char *argv[]' give a string? explain how C++ sees it
 2. 
@@ -12,18 +14,16 @@
 
 // what is this error in countUnique chars where the function is_open() is not available 2. it was istream not ifstream lol.
 
-// # might todo
-// 1. add argv and argc to main for the user to name the file in the terminal they want to read. enable reading through different trajectores as well
-// 2. 
+// # todo
+// Instead of sorting by value, sort by percentage.
 
 
 namespace CountLetters
 {
 
-  namespace {
 
-    std::map<char, int> countCharsInString(const std::string& str) {
-      std::map<char, int> outcome;;
+    static std::map<char, float> countCharsInString(const std::string& str) {
+      std::map<char, float> outcome;;
 
       for (const char& c : str) {
         outcome[c]++;
@@ -31,12 +31,11 @@ namespace CountLetters
       return outcome;
 
     }
-  }
 
-  std::map<char, int> countUniqueChars(std::ifstream& incoming) {
+    static std::map<char, float> countUniqueChars(std::ifstream& incoming) {
 
 
-    std::map<char, int> outcome;
+    std::map<char, float> outcome;
 
     std::string line = "";
     while (getline(incoming, line)) {
@@ -56,29 +55,32 @@ namespace CountLetters
 
 namespace Display {
 
-  namespace {
-
-    std::string createCharIntRow(char key, int value) {
+  template<typename Key, typename Value>
+  static std::string createCharFloatRow(Key key, Value value) {
       std::stringstream row;      
 
-      row << '[' << key << "] " << std::string(value, '*');
+      row << '[' << key << "] " << std::string(static_cast<int>(std::round(valuep)), '=') << " - " << value;
       return row.str();
     }
-  }
+
+    static float getPercentageFromTotal(float value, float total) {
+      return (value * 100) / total;
+    }
 
 template<typename T>
-static void displayCharInt(T& data) {    
+static void hotizontalBarChart(T& data) {
   std::stringstream out;
 
   for (const auto& pair : data) {
-    out << createCharIntRow(pair.first, pair.second) << '\n';       
+    out << createCharFloatRow(pair.first, pair.second) << '\n';
   }
       
   std::cout << out.str();
 }
 
-static std::vector<std::pair<char, int>> sortByValue(std::map<char, int>& charMap) {
-  std::vector<std::pair<char, int>> vec(charMap.begin(), charMap.end());
+template<typename T>
+static std::vector<std::pair<char, float>> sortByValue(T& charMap) {
+  std::vector<std::pair<char, float>> vec(charMap.begin(), charMap.end());
 
   sort(vec.begin(), vec.end(), [](auto& a, auto& b) {
     return a.second > b.second;
@@ -87,21 +89,52 @@ static std::vector<std::pair<char, int>> sortByValue(std::map<char, int>& charMa
   return vec;
 }
 
+static std::vector<std::pair<char, float>> sortByProcent(std::map<char, float>& charMap, int decimal) {
+  std::vector<std::pair<char, float>> vec(charMap.begin(), charMap.end());
+
+  float total = 0;
+  for (int i = 0; i < vec.size(); i++) {
+    total += vec[i].second;
+  }
+
+  for (int i = 0; i < vec.size(); i++) {
+    float procent = getPercentageFromTotal(vec[i].second, total);
+    vec[i].second = std::round(procent * std::pow(10, decimal)) / std::pow(10, decimal);
+  }
+
+  vec = sortByValue(vec);     
+
+  return vec;
+}
+
 }
 
 int main(int argc, char* argv[])
-{
-  
-  std::ifstream file("test.txt"); 
+{    
+
+  std::ifstream file;
+
+  for (int i = 0; i < argc ; i++) {
+    
+    if (argc == 1) {
+      file.open("test.txt");
+      std::cout << "Opened test.txt because no file was specified\n";
+    }
+    else {
+      file.open(argv[i]);
+    }
 
   if (!file.is_open()) {
-    std::cerr << "File did not open";
-    return 1;
+    std::cerr << "File \'" << argv[i] << "\' did not open.\n";
+    continue;
   }
  
   auto counted = CountLetters::countUniqueChars(file);  
-  auto sorted = Display::sortByValue(counted);
-  Display::displayCharInt(sorted);
+  auto sorted = Display::sortByProcent(counted, 10);
+  Display::hotizontalBarChart(sorted);
+  std::cout << "-------------------------------------------";
+  file.close();
 
+  }
   return 0;
 }
