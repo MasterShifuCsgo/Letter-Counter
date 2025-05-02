@@ -80,13 +80,13 @@ static std::vector<std::pair<char, float>> sortByProcent(
   std::vector<std::pair<char, float>> vec(charMap.begin(), charMap.end());
 
   float total = 0;
-  for (int i = 0; i < vec.size(); i++) {
-    total += vec[i].second;
+  for (auto& pair : vec) {
+    total += pair.second;
   }
 
-  for (int i = 0; i < vec.size(); i++) {
-    float procent = getPercentageFromTotal(vec[i].second, total);
-    vec[i].second =
+  for (auto& pair : vec) {
+    float procent = getPercentageFromTotal(pair.second, total);
+    pair.second =
         std::round(procent * std::pow(10, decimal)) / std::pow(10, decimal);
   }
 
