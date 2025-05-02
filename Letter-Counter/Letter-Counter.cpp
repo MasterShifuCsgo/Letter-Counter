@@ -7,16 +7,15 @@
 #include <string>
 #include <vector>
 
-// # todo
-// Instead of sorting by value, sort by percentage.
-
 namespace CountLetters {
 
 static std::map<char, float> countCharsInString(const std::string& str) {
   std::map<char, float> outcome;
 
   for (const char& c : str) {
-    outcome[c]++;
+    if (std::isalpha(static_cast<unsigned char>(c))) {
+      outcome[std::tolower(c)]++;
+    }
   }
   return outcome;
 }
@@ -55,7 +54,7 @@ static float getPercentageFromTotal(float value, float total) {
 }
 
 template <typename T>
-static void hotizontalBarChart(T& data) {
+static void horizontalBarChart(T& data) {
   std::stringstream out;
 
   for (const auto& pair : data) {
@@ -75,7 +74,7 @@ static std::vector<std::pair<char, float>> sortByValue(T& charMap) {
   return vec;
 }
 
-static std::vector<std::pair<char, float>> sortByProcent(
+static std::vector<std::pair<char, float>> sortByPercent(
     std::map<char, float>& charMap, int decimal) {
   std::vector<std::pair<char, float>> vec(charMap.begin(), charMap.end());
 
@@ -85,9 +84,9 @@ static std::vector<std::pair<char, float>> sortByProcent(
   }
 
   for (auto& pair : vec) {
-    float procent = getPercentageFromTotal(pair.second, total);
+    float percent = getPercentageFromTotal(pair.second, total);
     pair.second =
-        std::round(procent * std::pow(10, decimal)) / std::pow(10, decimal);
+        std::round(percent * std::pow(10, decimal)) / std::pow(10, decimal);
   }
 
   vec = sortByValue(vec);
@@ -100,13 +99,8 @@ static std::vector<std::pair<char, float>> sortByProcent(
 int main(int argc, char* argv[]) {
   std::ifstream file;
 
-  for (int i = 0; i < argc; i++) {
-    if (argc == 1) {
-      file.open("test.txt");
-      std::cout << "Opened test.txt because no file was specified\n";
-    } else {
+  for (int i = 1; i < argc; i++) {    
       file.open(argv[i]);
-    }
 
     if (!file.is_open()) {
       std::cerr << "File \'" << argv[i] << "\' did not open.\n";
@@ -114,10 +108,14 @@ int main(int argc, char* argv[]) {
     }
 
     auto counted = CountLetters::countUniqueChars(file);
-    auto sorted = Display::sortByProcent(counted, 10);
-    Display::hotizontalBarChart(sorted);
-    std::cout << "-------------------------------------------";
+    auto sorted = Display::sortByPercent(counted, 3);
+
+    std::cout << "File: " << argv[i] << '\n';
+    Display::horizontalBarChart(sorted);
+    std::cout << "-------------------------------------------\n";
     file.close();
   }
+
+  system("pause");
   return 0;
 }
